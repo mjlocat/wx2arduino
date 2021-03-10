@@ -31,7 +31,12 @@ def main():
         'database': os.getenv('DBDATABASE')
     }
     cnx = mysql.connector.connect(**dbconfig)
-    ser = serial.Serial(os.getenv("SERIAL_PORT"))
+    try:
+        ser = serial.Serial(os.getenv("SERIAL_PORT"))
+    except serial.SerialException:
+        print("Unable to open port")
+        cnx.close()
+        exit(1)
     
     while True:
         temperature = getData(cnx, tempquery)
@@ -46,7 +51,12 @@ def main():
             "R": "{:2d}".format(rain)
         }
 
-        ser.write(json.dumps(result).encode('utf-8'))
+        try:
+            ser.write(json.dumps(result).encode('utf-8'))
+        except serial.SerialException:
+            cnx.close()
+            exit(1)
+
         cnx.commit() # Results get cached without this
         time.sleep(float(os.getenv("REFRESH")))
 

@@ -40,3 +40,16 @@ Weather information to Arduino display
     ``` shell
     python3 wx2arduino.py
     ```
+
+## Automatically Run When Plugging Arduino In
+
+NOTE: Not yet tested
+
+1. Create a new file `10-wx2arduino.rules` in `/etc/udev/rules.d`
+    ```
+    SUBSYSTEMS=="usb",KERNEL=="ttyACM*",ATTRS{idVendor}=="2341",ATTRS{idProduct}=="0043",GROUP="dialout",MODE="0666",RUN+="sudo -iu <USER> /bin/bash -c 'cd ~/code/wx2arduino && python3 wx2arduino.py'"
+    # Update the idVendor and idProduct to match the vendor and product for your Arduino
+    # Update <USER> to your user
+    # Make sure your user is in the "dialout" group
+    # Update the directory to the directory you have this code stored in
+    ```
