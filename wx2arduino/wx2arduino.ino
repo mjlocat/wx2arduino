@@ -1,12 +1,16 @@
 #include <LiquidCrystal.h>
 #include <LCDKeypad.h>
 #include <ArduinoJson.h>
+#include <string.h>
 
 #define T 3,0
 #define W 10,0
 #define H 3,1
 #define R 10,1
+#define LEN1 4
+#define LEN2 6
 #define BUF_SIZE 512
+#define FILL " "
 
 LCDKeypad lcd;
 String buf;
@@ -31,12 +35,25 @@ void loop() {
     deserializeJson(doc, buf);
     lcd.setCursor(T);
     lcd.write(doc["T"].as<char*>());
+    for (int i=0; i < LEN1 - strlen(doc["T"].as<char*>()); i++) {
+      lcd.write(FILL);
+    }
     lcd.setCursor(W);
     lcd.write(doc["W"].as<char*>());
+    for (int i=0; i < LEN2 - strlen(doc["W"].as<char*>()); i++) {
+      lcd.write(FILL);
+    }
     lcd.setCursor(H);
     lcd.write(doc["H"].as<char*>());
+    for (int i=0; i < LEN1 - strlen(doc["H"].as<char*>()); i++) {
+      lcd.write(FILL);
+    }
     lcd.setCursor(R);
     lcd.write(doc["R"].as<char*>());
+    lcd.write("\"");
+    for (int i=0; i < LEN2 - strlen(doc["R"].as<char*>()) - 1; i++) {
+      lcd.write(FILL);
+    }
     doc.clear();
   }
 }

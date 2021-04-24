@@ -85,9 +85,9 @@ def main():
         rain = get_rain_last_hour(cnx)
 
         result = {
-            "T": "{:3d}".format(math.trunc(temperature)),
-            "W": "{:2d}".format(math.trunc(windspeed)),
-            "H": "{:3d}".format(humidity),
+            "T": "{:d}".format(math.trunc(temperature)),
+            "W": "{:d}".format(math.trunc(windspeed)),
+            "H": "{:d}".format(humidity),
             "R": "{:1.2f}".format(rain)
         }
 
