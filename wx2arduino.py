@@ -83,6 +83,8 @@ def main():
         windspeed = getData(cnx, windquery)
         humidity = getData(cnx, humidityquery)
         rain = get_rain_last_hour(cnx)
+        if rain is None:
+            rain = 0
 
         result = {
             "T": "{:d}".format(math.trunc(temperature)),
