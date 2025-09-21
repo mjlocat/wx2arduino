@@ -68,7 +68,9 @@ def main():
         'user': os.getenv('DBUSER'),
         'password': os.getenv('DBPASS'),
         'host': os.getenv('DBHOST'),
-        'database': os.getenv('DBDATABASE')
+        'database': os.getenv('DBDATABASE'),
+        'charset': "utf8mb4",
+        'collation': "utf8mb4_general_ci"
     }
     cnx = mysql.connector.connect(**dbconfig)
     try:
