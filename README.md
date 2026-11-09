@@ -4,7 +4,7 @@ Weather information to Arduino display
 ## Prerequisites
 
 * python3 and pip3
-* The [WeatherStation](https://github.com/mjlocat/WeatherStation) project running and writing weather data to a database
+* An MQTT broker receiving weather data (rtl_433 Acurite-5n1 topics, plus a rain-in-last-hour topic); topics are configurable in `.env`
 
 ## Required Hardware
 
