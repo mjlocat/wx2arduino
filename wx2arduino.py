@@ -1,7 +1,6 @@
 import json
 import math
 import os
-import time
 import threading
 from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
@@ -30,7 +29,21 @@ def on_connect(client, userdata, flags, reason_code, properties):
         client.subscribe(topic)
 
 
+def send(ser):
+    """Write the latest readings to the Arduino. Caller must hold the lock."""
+    if len(latest) < 4:
+        return  # Haven't heard every reading yet
+    result = {
+        "T": "{:d}".format(math.trunc(latest['T'])),
+        "W": "{:d}".format(math.trunc(latest['W'])),
+        "H": "{:d}".format(math.trunc(latest['H'])),
+        "R": "{:1.2f}".format(latest['R'])
+    }
+    ser.write(json.dumps(result).encode('utf-8'))
+
+
 def on_message(client, userdata, msg):
+    ser, failed = userdata
     try:
         value = float(msg.payload.decode('utf-8'))
     except (ValueError, UnicodeDecodeError):
@@ -38,9 +51,17 @@ def on_message(client, userdata, msg):
     if not math.isfinite(value):
         return
     with lock:
+        matched = False
         for key, topic in topics().items():
             if msg.topic == topic:
                 latest[key] = value
+                matched = True
+        if not matched:
+            return
+        try:
+            send(ser)  # New data arrived, refresh the display
+        except serial.SerialException:
+            failed.set()
 
 
 def main():
@@ -51,7 +72,8 @@ def main():
         print("Unable to open port")
         exit(1)
 
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    failed = threading.Event()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata=(ser, failed))
     username = os.getenv('MQTT_USER')
     if username:
         client.username_pw_set(username, os.getenv('MQTT_PASS'))
@@ -61,25 +83,9 @@ def main():
                    int(os.getenv('MQTT_PORT', '1883')))
     client.loop_start()  # Handles network traffic and reconnects in a thread
 
-    while True:
-        time.sleep(float(os.getenv("REFRESH", "10")))
-        with lock:
-            data = dict(latest)
-        if len(data) < 4:
-            continue  # Haven't heard every reading yet
-
-        result = {
-            "T": "{:d}".format(math.trunc(data['T'])),
-            "W": "{:d}".format(math.trunc(data['W'])),
-            "H": "{:d}".format(math.trunc(data['H'])),
-            "R": "{:1.2f}".format(data['R'])
-        }
-
-        try:
-            ser.write(json.dumps(result).encode('utf-8'))
-        except serial.SerialException:
-            client.loop_stop()
-            exit(1)
+    failed.wait()  # Run until a serial write fails
+    client.loop_stop()
+    exit(1)
 
 
 if __name__ == "__main__":
