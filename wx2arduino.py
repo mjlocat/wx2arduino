@@ -33,7 +33,9 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
     try:
         value = float(msg.payload.decode('utf-8'))
-    except ValueError:
+    except (ValueError, UnicodeDecodeError):
+        return
+    if not math.isfinite(value):
         return
     with lock:
         for key, topic in topics().items():
